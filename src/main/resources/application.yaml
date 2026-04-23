@@ -1,3 +1,24 @@
 spring:
   application:
     name: my-market-app
+
+  profiles:
+    active: dev
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
