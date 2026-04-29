@@ -3,14 +3,20 @@ package ru.yandex.practicum.mymarket.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.mymarket.dto.ItemDto;
 import ru.yandex.practicum.mymarket.entity.CartItem;
+import ru.yandex.practicum.mymarket.entity.Item;
 import ru.yandex.practicum.mymarket.repository.CartItemRepository;
+import ru.yandex.practicum.mymarket.repository.ItemRepository;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CartService {
 
     private final CartItemRepository cartItemRepository;
+    private final ItemRepository itemRepository;
 
     public int getCount(Long itemId) {
         return cartItemRepository.findByItemId(itemId)
@@ -37,6 +43,28 @@ public class CartService {
             } else if (cartItem != null) {
                 cartItemRepository.delete(cartItem);
             }
+        } else if ("DELETE".equals(action)) {
+            if (cartItem != null) {
+                cartItemRepository.delete(cartItem);
+            }
         }
+    }
+
+    public List<ItemDto> getCartItems() {
+        return cartItemRepository.findAll().stream()
+                .map(cartItem -> {
+                    Item item = itemRepository.findById(cartItem.getItemId()).orElseThrow(() -> new RuntimeException("Товар не найден: " + cartItem.getItemId()));
+                    return new ItemDto(item, cartItem.getCount());
+                })
+                .toList();
+    }
+
+    public long getTotal() {
+        return cartItemRepository.findAll().stream()
+                .mapToLong(cartItem -> {
+                    Item item = itemRepository.findById(cartItem.getItemId()).orElseThrow(() -> new RuntimeException("Товар не найден: " + cartItem.getItemId()));
+                    return item.getPrice() * cartItem.getCount();
+                })
+                .sum();
     }
 }
