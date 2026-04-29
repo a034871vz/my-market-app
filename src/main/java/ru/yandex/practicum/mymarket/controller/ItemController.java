@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
@@ -35,14 +36,7 @@ public class ItemController {
         List<ItemDto> currentRow = new ArrayList<>();
 
         for (Item item : items) {
-            currentRow.add(new ItemDto(
-                    item.getId(),
-                    item.getTitle(),
-                    item.getDescription(),
-                    item.getImgPath(),
-                    item.getPrice(),
-                    cartService.getCount(item.getId())
-            ));
+            currentRow.add(new ItemDto(item, cartService.getCount(item.getId())));
 
             if (currentRow.size() == 3) {
                 itemRows.add(new ArrayList<>(currentRow));
@@ -66,7 +60,6 @@ public class ItemController {
                 page.hasPrevious(),
                 page.hasNext()
         ));
-
         return "items";
     }
 
@@ -88,7 +81,21 @@ public class ItemController {
         if (!"NO".equals(sort)) {
             redirect.append("&sort=").append(sort);
         }
-
         return redirect.toString();
+    }
+
+    @GetMapping("/items/{id}")
+    public String getItem(@PathVariable Long id, Model model) {
+        Item item = itemService.getItem(id);
+        model.addAttribute("item", new ItemDto(item, cartService.getCount(item.getId())));
+        return "item";
+    }
+
+    @PostMapping("/items/{id}")
+    public String updateItemCart(@PathVariable Long id, @RequestParam String action, Model model) {
+        cartService.updateCartItem(id, action);
+        Item item = itemService.getItem(id);
+        model.addAttribute("item", new ItemDto(item, cartService.getCount(item.getId())));
+        return "item";
     }
 }

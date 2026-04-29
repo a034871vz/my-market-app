@@ -30,4 +30,8 @@ public class ItemService {
         }
         return itemRepository.findAll(pageable);
     }
+
+    public Item getItem(Long id) {
+        return itemRepository.findById(id).orElseThrow(() -> new RuntimeException("Товар не найден: " + id));
+    }
 }
