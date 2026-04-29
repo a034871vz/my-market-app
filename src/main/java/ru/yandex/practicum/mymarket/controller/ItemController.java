@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
 import ru.yandex.practicum.mymarket.dto.PagingDto;
 import ru.yandex.practicum.mymarket.entity.Item;
+import ru.yandex.practicum.mymarket.service.CartService;
 import ru.yandex.practicum.mymarket.service.ItemService;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.List;
 public class ItemController {
 
     private final ItemService itemService;
+    private final CartService cartService;
 
     @GetMapping({"/", "/items"})
     public String getItems(@RequestParam(required = false) String search, @RequestParam(required = false, defaultValue = "NO") String sort,
@@ -38,7 +40,7 @@ public class ItemController {
                     item.getDescription(),
                     item.getImgPath(),
                     item.getPrice(),
-                    0
+                    cartService.getCount(item.getId())
             ));
 
             if (currentRow.size() == 3) {
