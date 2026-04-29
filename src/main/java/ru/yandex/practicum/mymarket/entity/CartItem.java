@@ -29,4 +29,9 @@ public class CartItem {
 
     @Column(nullable = false)
     private int count;
+
+    public CartItem(Long itemId, int count) {
+        this.itemId = itemId;
+        this.count = count;
+    }
 }

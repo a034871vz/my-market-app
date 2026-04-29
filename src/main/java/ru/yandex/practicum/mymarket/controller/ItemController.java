@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
 import ru.yandex.practicum.mymarket.dto.PagingDto;
@@ -67,5 +68,27 @@ public class ItemController {
         ));
 
         return "items";
+    }
+
+    @PostMapping("/items")
+    public String updateCartItem(@RequestParam Long id, @RequestParam(required = false) String search,
+                                 @RequestParam(required = false, defaultValue = "NO") String sort,
+                                 @RequestParam(required = false, defaultValue = "1") int pageNumber,
+                                 @RequestParam(required = false, defaultValue = "5") int pageSize, @RequestParam String action) {
+
+        cartService.updateCartItem(id, action);
+
+        StringBuilder redirect = new StringBuilder("redirect:/items?");
+        redirect.append("pageNumber=").append(pageNumber);
+        redirect.append("&pageSize=").append(pageSize);
+
+        if (search != null && !search.isEmpty()) {
+            redirect.append("&search=").append(search);
+        }
+        if (!"NO".equals(sort)) {
+            redirect.append("&sort=").append(sort);
+        }
+
+        return redirect.toString();
     }
 }
