@@ -1,6 +1,7 @@
 package ru.yandex.practicum.mymarket.dto;
 
 import ru.yandex.practicum.mymarket.entity.Item;
+import ru.yandex.practicum.mymarket.entity.OrderItem;
 
 public record ItemDto(
         long id,
@@ -12,5 +13,9 @@ public record ItemDto(
 ) {
     public ItemDto(Item item, int count) {
         this(item.getId(), item.getTitle(), item.getDescription(), item.getImgPath(), item.getPrice(), count);
+    }
+
+    public ItemDto(OrderItem item) {
+        this(item.getId(), item.getTitle(), null, null, item.getPrice(), item.getCount());
     }
 }

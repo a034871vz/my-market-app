@@ -67,4 +67,9 @@ public class CartService {
                 })
                 .sum();
     }
+
+    @Transactional
+    public void clearCart() {
+        cartItemRepository.deleteAll();
+    }
 }

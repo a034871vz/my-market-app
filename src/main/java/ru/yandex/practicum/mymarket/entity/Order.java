@@ -12,25 +12,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "cart_items")
+@Table(name = "orders")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItem {
+public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "item_id", nullable = false, unique = true)
-    private Long itemId;
+    @Column(name = "total_sum")
+    private Long totalSum;
 
-    @Column(nullable = false)
-    private Integer count;
-
-    public CartItem(Long itemId, int count) {
-        this.itemId = itemId;
-        this.count = count;
+    public Order(long sum) {
+        this.totalSum = sum;
     }
 }
