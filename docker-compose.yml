@@ -14,5 +14,21 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  app:
+    build: .
+    container_name: my-market-app
+    depends_on:
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: marketdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
