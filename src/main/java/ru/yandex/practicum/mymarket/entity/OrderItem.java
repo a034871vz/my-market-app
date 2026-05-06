@@ -1,18 +1,14 @@
 package ru.yandex.practicum.mymarket.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
 
-@Entity
 @Table(name = "order_items")
 @Getter
 @Setter
@@ -21,22 +17,21 @@ import ru.yandex.practicum.mymarket.dto.ItemDto;
 public class OrderItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", nullable = false)
+    @Column("order_id")
     private Long orderId;
 
-    @Column(name = "item_id", nullable = false)
+    @Column("item_id")
     private Long itemId;
 
-    @Column(nullable = false)
+    @Column()
     private String title;
 
-    @Column(nullable = false)
+    @Column()
     private Long price;
 
-    @Column(nullable = false)
+    @Column()
     private Integer count;
 
     public OrderItem(Long orderId, ItemDto item) {

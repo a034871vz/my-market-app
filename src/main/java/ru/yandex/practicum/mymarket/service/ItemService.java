@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.entity.Item;
 import ru.yandex.practicum.mymarket.repository.ItemRepository;
 
@@ -15,23 +16,23 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
 
-    public Page<Item> getItems(String search, String sort, int pageNumber, int pageSize) {
-        Sort sorting = Sort.unsorted();
-        if ("ALPHA".equals(sort)) {
-            sorting = Sort.by("title");
-        } else if ("PRICE".equals(sort)) {
-            sorting = Sort.by("price");
-        }
+    public Mono<Page<Item>> getItems(String search, String sort, int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize, buildSort(sort));
 
-        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize, sorting);
-
-        if (search != null && !search.isEmpty()) {
-            return itemRepository.findBySearch(search, pageable);
-        }
-        return itemRepository.findAll(pageable);
+        return search != null && !search.isEmpty()
+                ? itemRepository.findBySearch(search, pageable)
+                : itemRepository.findAllPaged(pageable);
     }
 
-    public Item getItem(Long id) {
-        return itemRepository.findById(id).orElseThrow(() -> new RuntimeException("Товар не найден: " + id));
+    private Sort buildSort(String sort) {
+        return switch (sort) {
+            case "ALPHA" -> Sort.by("title").ascending();
+            case "PRICE" -> Sort.by("price").ascending();
+            default -> Sort.unsorted();
+        };
+    }
+
+    public Mono<Item> getItem(Long id) {
+        return itemRepository.findById(id).switchIfEmpty(Mono.error(() -> new RuntimeException("Товар не найден: " + id)));
     }
 }
