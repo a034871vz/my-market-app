@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.service.CartService;
 
 @Controller
@@ -15,18 +16,29 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping("/cart/items")
-    public String getCart(Model model) {
-        model.addAttribute("items", cartService.getCartItems());
-        model.addAttribute("total", cartService.getTotal());
-        return "cart";
+    public Mono<String> getCart(Model model) {
+        return Mono.zip(
+                cartService.getCartItems().collectList(),
+                cartService.getTotal(),
+                (items, total) -> {
+                    model.addAttribute("items", items);
+                    model.addAttribute("total", total);
+                    return "cart";
+                }
+        );
     }
 
     @PostMapping("/cart/items")
-    public String updateCart(@RequestParam Long id, @RequestParam String action, Model model) {
-        cartService.updateCartItem(id, action);
-
-        model.addAttribute("items", cartService.getCartItems());
-        model.addAttribute("total", cartService.getTotal());
-        return "cart";
+    public Mono<String> updateCart(@RequestParam Long id, @RequestParam String action, Model model) {
+        return cartService.updateCartItem(id, action)
+                .then(Mono.zip(
+                        cartService.getCartItems().collectList(),
+                        cartService.getTotal(),
+                        (items, total) -> {
+                            model.addAttribute("items", items);
+                            model.addAttribute("total", total);
+                            return "cart";
+                        }
+                ));
     }
 }
