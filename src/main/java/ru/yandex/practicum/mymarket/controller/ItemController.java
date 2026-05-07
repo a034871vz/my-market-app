@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
@@ -68,27 +69,31 @@ public class ItemController {
     }
 
     @PostMapping("/items")
-    public Mono<String> updateCartItem(@RequestParam Long id, @RequestParam(required = false) String search,
-                                       @RequestParam(required = false, defaultValue = "NO") String sort,
-                                       @RequestParam(required = false, defaultValue = "1") int pageNumber,
-                                       @RequestParam(required = false, defaultValue = "5") int pageSize, @RequestParam String action) {
+    public Mono<String> updateCartItem(ServerWebExchange exchange) {
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    Long id = Long.valueOf(formData.getFirst("id"));
+                    String action = formData.getFirst("action");
+                    String search = formData.getFirst("search");
+                    String sort = formData.getFirst("sort");
+                    int pageNumber = Integer.parseInt(formData.getFirst("pageNumber"));
+                    int pageSize = Integer.parseInt(formData.getFirst("pageSize"));
 
-        return cartService.updateCartItem(id, action)
-                .then(Mono.fromCallable(() -> {
-                    StringBuilder redirect = new StringBuilder("redirect:/items?");
-                    redirect.append("pageNumber=").append(pageNumber);
-                    redirect.append("&pageSize=").append(pageSize);
-
-                    if (search != null && !search.isEmpty()) {
-                        redirect.append("&search=").append(search);
-                    }
-                    if (!"NO".equals(sort)) {
-                        redirect.append("&sort=").append(sort);
-                    }
-                    return redirect.toString();
-                }));
+                    return cartService.updateCartItem(id, action)
+                            .then(Mono.fromCallable(() -> {
+                                StringBuilder redirect = new StringBuilder("redirect:/items?");
+                                redirect.append("pageNumber=").append(pageNumber);
+                                redirect.append("&pageSize=").append(pageSize);
+                                if (search != null && !search.isEmpty()) {
+                                    redirect.append("&search=").append(search);
+                                }
+                                if (!"NO".equals(sort)) {
+                                    redirect.append("&sort=").append(sort);
+                                }
+                                return redirect.toString();
+                            }));
+                });
     }
-
 
     @GetMapping("/items/{id}")
     public Mono<String> getItem(@PathVariable Long id, Model model) {

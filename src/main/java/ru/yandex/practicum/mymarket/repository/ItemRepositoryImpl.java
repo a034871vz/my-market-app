@@ -63,7 +63,7 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
             return Criteria.empty();
         }
         String pattern = "%" + search.toLowerCase() + "%";
-        return Criteria.where("LOWER(title)").like(pattern)
-                .or("LOWER(description)").like(pattern);
+        return Criteria.where("title").like(pattern)
+                .or("description").like(pattern);
     }
 }

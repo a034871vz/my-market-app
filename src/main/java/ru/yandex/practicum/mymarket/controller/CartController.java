@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.service.CartService;
 
@@ -29,16 +29,20 @@ public class CartController {
     }
 
     @PostMapping("/cart/items")
-    public Mono<String> updateCart(@RequestParam Long id, @RequestParam String action, Model model) {
-        return cartService.updateCartItem(id, action)
-                .then(Mono.zip(
-                        cartService.getCartItems().collectList(),
-                        cartService.getTotal(),
-                        (items, total) -> {
-                            model.addAttribute("items", items);
-                            model.addAttribute("total", total);
-                            return "cart";
-                        }
-                ));
+    public Mono<String> updateCart(ServerWebExchange exchange, Model model) {
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    Long id = Long.valueOf(formData.getFirst("id"));
+                    String action = formData.getFirst("action");
+
+                    return cartService.updateCartItem(id, action)
+                            .then(cartService.getCartItems().collectList())
+                            .zipWith(cartService.getTotal())
+                            .doOnNext(tuple -> {
+                                model.addAttribute("items", tuple.getT1());
+                                model.addAttribute("total", tuple.getT2());
+                            })
+                            .thenReturn("cart");
+                });
     }
 }
