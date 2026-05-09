@@ -1,7 +1,6 @@
 spring:
   application:
     name: my-market-app
-
   profiles:
     active: dev
 
@@ -14,10 +13,12 @@ spring:
 
   logging:
     level:
-      liquibase: DEBUG
+      ru.yandex.practicum.mymarket: DEBUG
+      org.springframework.web: DEBUG
       org.springframework.r2dbc: DEBUG
       io.r2dbc.postgresql.QUERY: DEBUG
-      io.r2dbc.h2: DEBUG
+      liquibase: DEBUG
+      org.testcontainers: INFO
 
 server:
   port: 8080

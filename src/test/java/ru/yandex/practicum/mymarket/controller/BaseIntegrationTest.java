@@ -2,22 +2,22 @@ package ru.yandex.practicum.mymarket.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import ru.yandex.practicum.mymarket.entity.Item;
 import ru.yandex.practicum.mymarket.repository.CartItemRepository;
 import ru.yandex.practicum.mymarket.repository.ItemRepository;
 import ru.yandex.practicum.mymarket.service.CartService;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureWebTestClient
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
     @Autowired
-    protected MockMvc mockMvc;
+    protected WebTestClient webTestClient;
 
     @Autowired
     protected ItemRepository itemRepository;
@@ -32,13 +32,13 @@ public abstract class BaseIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
-        cartItemRepository.deleteAll();
-        itemRepository.deleteAll();
+        cartItemRepository.deleteAll().block();
+        itemRepository.deleteAll().block();
 
-        Item ball = itemRepository.save(new Item(null, "Мяч", "Описание", "images/ball.png", 1500L));
+        Item ball = itemRepository.save(new Item(null, "Мяч", "Описание", "images/ball.png", 1500L)).block();
 
         this.ballId = ball.getId();
 
-        cartService.updateCartItem(ballId, "PLUS");
+        cartService.updateCartItem(ballId, "PLUS").block();
     }
 }

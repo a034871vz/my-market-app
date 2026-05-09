@@ -1,11 +1,10 @@
 spring:
   r2dbc:
-    url: r2dbc:tc:postgresql:///marketdb?TC_IMAGE_TAG=15-alpine
+    url: r2dbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:marketdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
 
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog-master.yaml
-
-  sql:
-    init:
-      mode: never
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:marketdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
