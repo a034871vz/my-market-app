@@ -1,38 +1,62 @@
 package ru.yandex.practicum.mymarket.controller;
 
 import org.junit.jupiter.api.Test;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import org.springframework.http.MediaType;
 
 class ItemControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
-    void shouldReturnItemsPage() throws Exception {
-        mockMvc.perform(get("/items"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("items"));
+    void shouldReturnItemsPage() {
+        webTestClient.get()
+                .uri("/items")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String body = response.getResponseBody();
+                    assert body != null;
+                    assert body.contains("Витрина магазина");
+                });
     }
 
     @Test
-    void shouldReturnItemsPageWithParameters() throws Exception {
-        mockMvc.perform(get("/items?search=ball&sort=ALPHA&pageNumber=1&pageSize=2"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("items"));
+    void shouldReturnItemsPageWithParameters() {
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/items")
+                        .queryParam("search", "ball")
+                        .queryParam("sort", "ALPHA")
+                        .queryParam("pageNumber", 1)
+                        .queryParam("pageSize", 2)
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML);
     }
 
     @Test
-    void shouldAddItemToCart() throws Exception {
-        mockMvc.perform(post("/items?id=" + ballId + "&action=PLUS&pageNumber=1&pageSize=5"))
-                .andExpect(status().is3xxRedirection());
+    void shouldAddItemToCart() {
+        webTestClient.post()
+                .uri("/items")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("id=" + ballId + "&action=PLUS&pageNumber=1&pageSize=5")
+                .exchange()
+                .expectStatus().is3xxRedirection();
     }
 
     @Test
-    void shouldReturnItemPage() throws Exception {
-        mockMvc.perform(get("/items/" + ballId))
-                .andExpect(status().isOk())
-                .andExpect(view().name("item"));
+    void shouldReturnItemPage() {
+        webTestClient.get()
+                .uri("/items/" + ballId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String body = response.getResponseBody();
+                    assert body != null;
+                    assert body.contains("Мяч");
+                });
     }
 }

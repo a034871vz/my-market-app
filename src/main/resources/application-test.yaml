@@ -1,23 +1,10 @@
 spring:
+  r2dbc:
+    url: r2dbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:marketdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.H2Dialect
-    defer-datasource-initialization: true
-
-  liquibase:
-    enabled: false
-
-  sql:
-    init:
-      mode: always
-
-  h2:
-    console:
-      enabled: false
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:marketdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}

@@ -1,17 +1,13 @@
 package ru.yandex.practicum.mymarket.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
 @Table(name = "cart_items")
 @Getter
 @Setter
@@ -20,13 +16,12 @@ import lombok.Setter;
 public class CartItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "item_id", nullable = false, unique = true)
+    @Column("item_id")
     private Long itemId;
 
-    @Column(nullable = false)
+    @Column()
     private Integer count;
 
     public CartItem(Long itemId, int count) {

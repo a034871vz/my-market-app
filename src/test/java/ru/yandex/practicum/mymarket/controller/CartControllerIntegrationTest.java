@@ -1,34 +1,38 @@
 package ru.yandex.practicum.mymarket.controller;
 
 import org.junit.jupiter.api.Test;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import org.springframework.http.MediaType;
 
 class CartControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
-    void shouldReturnCartPage() throws Exception {
-        mockMvc.perform(get("/cart/items"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("cart"))
-                .andExpect(model().attributeExists("items", "total"));
+    void shouldReturnCartPage() {
+        webTestClient.get()
+                .uri("/cart/items")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML);
     }
 
     @Test
-    void shouldUpdateCartItem() throws Exception {
-        mockMvc.perform(post("/cart/items?id=" + ballId + "&action=PLUS"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("cart"));
+    void shouldUpdateCartItem() {
+        webTestClient.post()
+                .uri("/cart/items")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("id=" + ballId + "&action=PLUS")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML);
     }
 
     @Test
-    void shouldDeleteCartItem() throws Exception {
-        mockMvc.perform(post("/cart/items?id=" + ballId + "&action=DELETE"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("cart"));
+    void shouldDeleteCartItem() {
+        webTestClient.post()
+                .uri("/cart/items")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("id=" + ballId + "&action=DELETE")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML);
     }
 }

@@ -3,6 +3,8 @@ package ru.yandex.practicum.mymarket.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
 import ru.yandex.practicum.mymarket.dto.OrderDto;
 import ru.yandex.practicum.mymarket.entity.Order;
@@ -21,34 +23,39 @@ public class OrderService {
     private final CartService cartService;
 
     @Transactional
-    public Long createOrder() {
-        List<ItemDto> cartItems = cartService.getCartItems();
-
-        if (cartItems.isEmpty()) {
-            throw new RuntimeException("Нет заказов");
-        }
-
-        Order order = new Order(cartItems.stream().mapToLong(i -> i.price() * i.count()).sum());
-        Order savedOrder = orderRepository.save(order);
-
-        List<OrderItem> orderItems = cartItems.stream().map(item -> new OrderItem(savedOrder.getId(), item)).toList();
-        orderItemRepository.saveAll(orderItems);
-        cartService.clearCart();
-        return savedOrder.getId();
+    public Mono<Long> createOrder() {
+        return cartService.getCartItems()
+                .collectList()
+                .switchIfEmpty(Mono.error(new RuntimeException("Нет заказов")))
+                .flatMap(itemDtos -> {
+                    long totalSum = itemDtos.stream()
+                            .mapToLong(item -> item.price() * item.count())
+                            .sum();
+                    return orderRepository.save(new Order(totalSum))
+                            .flatMap(order -> {
+                                List<OrderItem> orderItems = itemDtos.stream().map(item -> new OrderItem(order.getId(), item)).toList();
+                                return orderItemRepository.saveAll(orderItems)
+                                        .then(cartService.clearCart())
+                                        .thenReturn(order.getId());
+                            });
+                });
     }
 
-    public List<OrderDto> getAllOrders() {
-        return orderRepository.findAll().stream()
-                .map(order -> {
-                    List<ItemDto> items = orderItemRepository.findByOrderId(order.getId()).stream().map(ItemDto::new).toList();
-                    return new OrderDto(order.getId(), items, order.getTotalSum());
-                })
-                .toList();
+    public Flux<OrderDto> getAllOrders() {
+        return orderRepository.findAll()
+                .concatMap(order -> orderItemRepository.findByOrderId(order.getId())
+                        .map(ItemDto::new)
+                        .collectList()
+                        .map(items -> new OrderDto(order.getId(), items, order.getTotalSum())));
     }
 
-    public OrderDto getOrder(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Заказ не найден: " + id));
-        List<ItemDto> items = orderItemRepository.findByOrderId(order.getId()).stream().map(ItemDto::new).toList();
-        return new OrderDto(order.getId(), items, order.getTotalSum());
+    public Mono<OrderDto> getOrder(Long id) {
+        return orderRepository.findById(id)
+                .switchIfEmpty(Mono.error(new RuntimeException("Заказ не найден: " + id)))
+                .flatMap(order -> orderItemRepository.findByOrderId(order.getId())
+                        .map(ItemDto::new)
+                        .collectList()
+                        .map(items -> new OrderDto(order.getId(), items, order.getTotalSum()))
+                );
     }
 }

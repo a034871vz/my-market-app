@@ -3,13 +3,12 @@ package ru.yandex.practicum.mymarket.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
 import ru.yandex.practicum.mymarket.entity.CartItem;
-import ru.yandex.practicum.mymarket.entity.Item;
 import ru.yandex.practicum.mymarket.repository.CartItemRepository;
 import ru.yandex.practicum.mymarket.repository.ItemRepository;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,58 +17,52 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final ItemRepository itemRepository;
 
-    public int getCount(Long itemId) {
+    public Mono<Integer> getCount(Long itemId) {
         return cartItemRepository.findByItemId(itemId)
                 .map(CartItem::getCount)
-                .orElse(0);
+                .defaultIfEmpty(0);
     }
 
     @Transactional
-    public void updateCartItem(Long itemId, String action) {
-        CartItem cartItem = cartItemRepository.findByItemId(itemId).orElse(null);
-
-        if ("PLUS".equals(action)) {
-            if (cartItem == null) {
-                cartItem = new CartItem(itemId, 1);
-            } else {
-                cartItem.setCount(cartItem.getCount() + 1);
-            }
-            cartItemRepository.save(cartItem);
-
-        } else if ("MINUS".equals(action)) {
-            if (cartItem != null && cartItem.getCount() > 1) {
-                cartItem.setCount(cartItem.getCount() - 1);
-                cartItemRepository.save(cartItem);
-            } else if (cartItem != null) {
-                cartItemRepository.delete(cartItem);
-            }
-        } else if ("DELETE".equals(action)) {
-            if (cartItem != null) {
-                cartItemRepository.delete(cartItem);
-            }
-        }
+    public Mono<Void> updateCartItem(Long itemId, String action) {
+        return cartItemRepository.findByItemId(itemId)
+                .flatMap(cartItem -> switch (action) {
+                    case "PLUS" -> {
+                        cartItem.setCount(cartItem.getCount() + 1);
+                        yield cartItemRepository.save(cartItem);
+                    }
+                    case "MINUS" -> {
+                        if (cartItem.getCount() > 1) {
+                            cartItem.setCount(cartItem.getCount() - 1);
+                            yield cartItemRepository.save(cartItem);
+                        } else {
+                            yield cartItemRepository.delete(cartItem);
+                        }
+                    }
+                    case "DELETE" -> cartItemRepository.delete(cartItem);
+                    default -> Mono.error(new IllegalArgumentException("Неизвестное действие " + action));
+                })
+                .switchIfEmpty("PLUS".equals(action)
+                        ? cartItemRepository.save(new CartItem(itemId, 1)).then()
+                        : Mono.empty()).then();
     }
 
-    public List<ItemDto> getCartItems() {
-        return cartItemRepository.findAll().stream()
-                .map(cartItem -> {
-                    Item item = itemRepository.findById(cartItem.getItemId()).orElseThrow(() -> new RuntimeException("Товар не найден: " + cartItem.getItemId()));
-                    return new ItemDto(item, cartItem.getCount());
-                })
-                .toList();
+    public Flux<ItemDto> getCartItems() {
+        return cartItemRepository.findAll()
+                .flatMap(cartItem -> itemRepository.findById(cartItem.getItemId())
+                        .switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
+                        .map(item -> new ItemDto(item, cartItem.getCount())));
     }
 
-    public long getTotal() {
-        return cartItemRepository.findAll().stream()
-                .mapToLong(cartItem -> {
-                    Item item = itemRepository.findById(cartItem.getItemId()).orElseThrow(() -> new RuntimeException("Товар не найден: " + cartItem.getItemId()));
-                    return item.getPrice() * cartItem.getCount();
-                })
-                .sum();
+    public Mono<Long> getTotal() {
+        return cartItemRepository.findAll()
+                .flatMap(cartItem -> itemRepository.findById(cartItem.getItemId()).switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
+                        .map(item -> item.getPrice() * cartItem.getCount())
+                ).reduce(0L, Long::sum);
     }
 
     @Transactional
-    public void clearCart() {
-        cartItemRepository.deleteAll();
+    public Mono<Void> clearCart() {
+        return cartItemRepository.deleteAll();
     }
 }

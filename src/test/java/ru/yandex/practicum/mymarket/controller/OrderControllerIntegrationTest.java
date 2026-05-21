@@ -1,43 +1,56 @@
 package ru.yandex.practicum.mymarket.controller;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.hamcrest.Matchers.containsString;
 
 class OrderControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
-    void shouldCreateOrder() throws Exception {
-        mockMvc.perform(post("/buy"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("/orders/*?newOrder=true"));
+    void shouldCreateOrder() {
+        webTestClient.post()
+                .uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/orders/\\d+\\?newOrder=true");
     }
 
     @Test
-    void shouldReturnOrdersPage() throws Exception {
-        mockMvc.perform(get("/orders"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("orders"));
+    void shouldReturnOrdersPage() {
+        webTestClient.get()
+                .uri("/orders")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
+                .expectBody(String.class)
+                .value(containsString("orders"));
     }
 
     @Test
-    void shouldReturnOrderPage() throws Exception {
-        String redirectUrl = mockMvc.perform(post("/buy"))
-                .andExpect(status().is3xxRedirection())
-                .andReturn()
-                .getResponse()
-                .getRedirectedUrl();
+    void shouldReturnOrderPage() {
+        String location = webTestClient.post()
+                .uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .returnResult(Void.class)
+                .getResponseHeaders()
+                .getFirst("Location");
 
-        String orderId = redirectUrl
+        String orderId = location
                 .replace("/orders/", "")
                 .replace("?newOrder=true", "");
 
-        mockMvc.perform(get("/orders/" + orderId))
-                .andExpect(status().isOk())
-                .andExpect(view().name("order"));
+        webTestClient.get()
+                .uri("/orders/" + orderId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String body = response.getResponseBody();
+                    assert body != null;
+                    assert body.contains("order");
+                });
     }
 }
