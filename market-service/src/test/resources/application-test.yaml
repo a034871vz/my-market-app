@@ -1,3 +1,22 @@
+postgres:
+  host: localhost
+  port: 5432
+  database: marketdb
+  username: postgres
+  password: postgres
+
 spring:
-  profiles:
-    active: test
+  r2dbc:
+    url: r2dbc:postgresql://${postgres.host}:${postgres.port}/${postgres.database}
+    username: ${postgres.username}
+    password: ${postgres.password}
+
+  datasource:
+    url: jdbc:postgresql://${postgres.host}:${postgres.port}/${postgres.database}
+    username: ${postgres.username}
+    password: ${postgres.password}
+
+  liquibase:
+    url: jdbc:postgresql://${postgres.host}:${postgres.port}/${postgres.database}
+    user: ${postgres.username}
+    password: ${postgres.password}

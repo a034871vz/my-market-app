@@ -18,13 +18,18 @@ class OrderControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void shouldReturnOrdersPage() {
+        webTestClient.post()
+                .uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection();
+
         webTestClient.get()
                 .uri("/orders")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
                 .expectBody(String.class)
-                .value(containsString("orders"));
+                .value(containsString("Заказ №"));
     }
 
     @Test
