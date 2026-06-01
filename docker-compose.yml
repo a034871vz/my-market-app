@@ -14,14 +14,23 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: market_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   app:
     build: .
     container_name: my-market-app
     depends_on:
       - postgres
+      - redis
     environment:
       SPRING_PROFILES_ACTIVE: dev
       POSTGRES_HOST: postgres
+      SPRING_DATA_REDIS_HOST: redis
       POSTGRES_DB: marketdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

@@ -8,14 +8,13 @@ import reactor.core.publisher.Mono;
 import ru.yandex.practicum.dto.ItemDto;
 import ru.yandex.practicum.entity.CartItem;
 import ru.yandex.practicum.repository.CartItemRepository;
-import ru.yandex.practicum.repository.ItemRepository;
 
 @Service
 @RequiredArgsConstructor
 public class CartService {
 
     private final CartItemRepository cartItemRepository;
-    private final ItemRepository itemRepository;
+    private final CachedItemService cachedItemService;
 
     public Mono<Integer> getCount(Long itemId) {
         return cartItemRepository.findByItemId(itemId)
@@ -49,14 +48,14 @@ public class CartService {
 
     public Flux<ItemDto> getCartItems() {
         return cartItemRepository.findAll()
-                .flatMap(cartItem -> itemRepository.findById(cartItem.getItemId())
+                .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId())
                         .switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
                         .map(item -> new ItemDto(item, cartItem.getCount())));
     }
 
     public Mono<Long> getTotal() {
         return cartItemRepository.findAll()
-                .flatMap(cartItem -> itemRepository.findById(cartItem.getItemId()).switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
+                .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId()).switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
                         .map(item -> item.getPrice() * cartItem.getCount())
                 ).reduce(0L, Long::sum);
     }
