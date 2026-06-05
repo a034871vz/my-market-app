@@ -2,9 +2,9 @@ package ru.yandex.practicum.service;
 
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.dto.BalanceResponse;
-import ru.yandex.practicum.dto.PaymentRequest;
-import ru.yandex.practicum.dto.PaymentResponse;
+import ru.yandex.practicum.payment.model.BalanceResponse;
+import ru.yandex.practicum.payment.model.PaymentRequest;
+import ru.yandex.practicum.payment.model.PaymentResponse;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,7 +18,7 @@ public class PaymentService {
     }
 
     public Mono<PaymentResponse> processPayment(PaymentRequest request) {
-        long amount = request.amount();
+        long amount = request.getAmount();
         long currentBalance = balance.get();
 
         if (currentBalance < amount) {

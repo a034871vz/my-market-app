@@ -1,29 +1,32 @@
 package ru.yandex.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.dto.BalanceResponse;
-import ru.yandex.practicum.dto.PaymentRequest;
-import ru.yandex.practicum.dto.PaymentResponse;
+import ru.yandex.practicum.payment.api.PaymentApi;
+import ru.yandex.practicum.payment.model.BalanceResponse;
+import ru.yandex.practicum.payment.model.PaymentRequest;
+import ru.yandex.practicum.payment.model.PaymentResponse;
 import ru.yandex.practicum.service.PaymentService;
 
 @RestController
 @RequiredArgsConstructor
-public class PaymentController {
+public class PaymentController implements PaymentApi {
 
     private final PaymentService paymentService;
 
-    @GetMapping("/balance")
-    public Mono<BalanceResponse> getBalance() {
-        return paymentService.getBalance();
+    @Override
+    public Mono<ResponseEntity<BalanceResponse>> getBalance(ServerWebExchange exchange) {
+        return paymentService.getBalance().map(ResponseEntity::ok);
     }
 
-    @PostMapping("/payment")
-    public Mono<PaymentResponse> processPayment(@RequestBody PaymentRequest request) {
-        return paymentService.processPayment(request);
+    @Override
+    public Mono<ResponseEntity<PaymentResponse>> processPayment(Mono<PaymentRequest> paymentRequest, ServerWebExchange exchange) {
+        return paymentRequest.flatMap(paymentService::processPayment).map(ResponseEntity::ok);
     }
 }
