@@ -22,6 +22,7 @@ dependencies {
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:r2dbc")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
 
 openApiGenerate {

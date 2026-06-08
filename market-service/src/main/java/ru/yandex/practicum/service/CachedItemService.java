@@ -81,15 +81,18 @@ public class CachedItemService {
                 PAGE_CONTENT_PREFIX, pageable.getPageNumber(), pageable.getPageSize(),
                 pageable.getSort().toString().replace(",", ""));
     }
+
     private String pageCountKey(String prefix) {
         return String.format("%s%s", PAGE_COUNT_PREFIX, prefix);
     }
+
     private String searchContentKey(String search, Pageable pageable) {
-        return String.format("%s%s:page=%d:size=%d:sort=%s",
+        return String.format("%ssearch=%s:page=%d:size=%d:sort=%s",
                 PAGE_CONTENT_PREFIX, search, pageable.getPageNumber(), pageable.getPageSize(),
                 pageable.getSort().toString().replace(",", ""));
     }
+
     private String searchCountKey(String search) {
-        return String.format("%s%s", PAGE_COUNT_PREFIX, search);
+        return String.format("%ssearch=%s", PAGE_COUNT_PREFIX, search);
     }
 }
