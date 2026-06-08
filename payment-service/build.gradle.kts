@@ -15,7 +15,7 @@ dependencies {
 
 openApiGenerate {
     generatorName.set("spring")
-    inputSpec.set("$rootDir/payment-service/src/main/resources/payment-api.yaml")
+    inputSpec.set("$rootDir/payment-api/payment-api.yaml")
     outputDir.set(layout.buildDirectory.dir("generated").get().asFile.absolutePath)
     apiPackage.set("ru.yandex.practicum.payment.api")
     modelPackage.set("ru.yandex.practicum.payment.model")

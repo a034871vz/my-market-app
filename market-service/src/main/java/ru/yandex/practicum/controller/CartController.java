@@ -20,12 +20,15 @@ public class CartController {
         return Mono.zip(
                 cartService.getCartItems().collectList(),
                 cartService.getTotal(),
-                (items, total) -> {
-                    model.addAttribute("items", items);
-                    model.addAttribute("total", total);
-                    return "cart";
-                }
-        );
+                cartService.canCheckout(),
+                cartService.getCheckoutStatusMessage()
+        ).map(tuple -> {
+            model.addAttribute("items", tuple.getT1());
+            model.addAttribute("total", tuple.getT2());
+            model.addAttribute("canCheckout", tuple.getT3());
+            model.addAttribute("checkoutMessage", tuple.getT4());
+            return "cart";
+        });
     }
 
     @PostMapping("/cart/items")
@@ -36,13 +39,7 @@ public class CartController {
                     String action = formData.getFirst("action");
 
                     return cartService.updateCartItem(id, action)
-                            .then(cartService.getCartItems().collectList())
-                            .zipWith(cartService.getTotal())
-                            .doOnNext(tuple -> {
-                                model.addAttribute("items", tuple.getT1());
-                                model.addAttribute("total", tuple.getT2());
-                            })
-                            .thenReturn("cart");
+                            .then(getCart(model));
                 });
     }
 }

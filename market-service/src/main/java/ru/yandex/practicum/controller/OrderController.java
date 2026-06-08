@@ -8,18 +8,28 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import reactor.core.publisher.Mono;
+import ru.yandex.practicum.service.CartService;
 import ru.yandex.practicum.service.OrderService;
+import ru.yandex.practicum.service.PaymentClientService;
 
 @Controller
 @RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
+    private final CartService cartService;
+    private final PaymentClientService paymentClientService;
 
     @PostMapping("/buy")
     public Mono<String> buy() {
-        return orderService.createOrder()
-                .map(orderId -> "redirect:/orders/" + orderId + "?newOrder=true");
+        return cartService.getTotal()
+                .flatMap(total -> paymentClientService.processPayment(total)
+                        .flatMap(success -> {
+                            if (!success) {
+                                return Mono.just("redirect:/cart/items?error=payment");
+                            }
+                            return orderService.createOrder().map(orderId -> "redirect:/orders/" + orderId + "?newOrder=true");
+                        }));
     }
 
     @GetMapping("/orders")

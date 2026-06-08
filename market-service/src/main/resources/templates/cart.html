@@ -46,12 +46,28 @@
         </div>
         <div class="row p-2">
             <div class="col">
-                <form action="/buy" method="post" th:if="${!items.isEmpty()}">
-                    <div class="hstack gap-3">
+                <div th:if="${!items.isEmpty()}">
+                    <!-- Кнопка Купить доступна -->
+                    <form action="/buy" method="post" th:if="${canCheckout}">
+                        <div class="hstack gap-3">
+                            <h2 th:text="'Итого: '+${total}+' руб.'"/>
+                            <button class="btn btn-warning ms-auto bi bi-bag-check"> Купить</button>
+                        </div>
+                    </form>
+
+                    <!-- Кнопка недоступна + сообщение -->
+                    <div th:if="${!canCheckout}" class="hstack gap-3">
                         <h2 th:text="'Итого: '+${total}+' руб.'"/>
-                        <button class="btn btn-warning ms-auto">Купить</button>
+                        <button class="btn btn-secondary ms-auto" disabled> Купить</button>
+                        <span class="text-danger" th:if="${checkoutMessage != null}" th:text="${checkoutMessage}"></span>
                     </div>
-                </form>
+                </div>
+
+                <!-- Пустая корзина -->
+                <div th:if="${items.isEmpty()}" class="text-center">
+                    <h3>Корзина пуста</h3>
+                    <a href="/items" class="btn btn-primary">Перейти к покупкам</a>
+                </div>
             </div>
         </div>
     </div>

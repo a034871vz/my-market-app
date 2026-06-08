@@ -17,7 +17,7 @@ import java.util.List;
 public class RedisConfig {
 
     @Bean
-    @Primary  // <-- Этот будет внедряться по умолчанию
+    @Primary
     public ReactiveRedisTemplate<String, Item> itemRedisTemplate(
             ReactiveRedisConnectionFactory factory, ObjectMapper objectMapper) {
 

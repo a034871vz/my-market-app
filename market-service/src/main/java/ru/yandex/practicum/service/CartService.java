@@ -15,6 +15,7 @@ public class CartService {
 
     private final CartItemRepository cartItemRepository;
     private final CachedItemService cachedItemService;
+    private final PaymentClientService paymentClientService;
 
     public Mono<Integer> getCount(Long itemId) {
         return cartItemRepository.findByItemId(itemId)
@@ -55,13 +56,29 @@ public class CartService {
 
     public Mono<Long> getTotal() {
         return cartItemRepository.findAll()
-                .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId()).switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
-                        .map(item -> item.getPrice() * cartItem.getCount())
-                ).reduce(0L, Long::sum);
+                .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId())
+                        .switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
+                        .map(item -> item.getPrice() * cartItem.getCount()))
+                .reduce(0L, Long::sum);
     }
 
     @Transactional
     public Mono<Void> clearCart() {
         return cartItemRepository.deleteAll();
+    }
+
+    public Mono<Boolean> canCheckout() {
+        return getTotal().flatMap(paymentClientService::hasEnoughFunds);
+    }
+
+    public Mono<String> getCheckoutStatusMessage() {
+        return getTotal()
+                .flatMap(total -> paymentClientService.getBalance()
+                        .flatMap(balance -> {
+                            if (balance < 0) return Mono.just("Сервис платежей недоступен");
+                            if (balance < total) return Mono.just("Недостаточно средств на счёте");
+                            return Mono.empty();
+                        }))
+                .defaultIfEmpty("");
     }
 }
