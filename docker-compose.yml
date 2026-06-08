@@ -21,16 +21,31 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  app:
-    build: .
-    container_name: my-market-app
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: payment_service
+    environment:
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  market-service:
+    build:
+      context: .
+      dockerfile: market-service/Dockerfile
+    container_name: market_service
     depends_on:
       - postgres
       - redis
+      - payment-service
     environment:
       SPRING_PROFILES_ACTIVE: dev
       POSTGRES_HOST: postgres
       SPRING_DATA_REDIS_HOST: redis
+      PAYMENT_SERVICE_URL: http://payment-service:8081
       POSTGRES_DB: marketdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
