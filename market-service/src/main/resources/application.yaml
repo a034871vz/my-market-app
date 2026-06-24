@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: market-service
+  profiles:
+    active: dev
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog-master.yaml
+
+  thymeleaf:
+    cache: false
+
+  logging:
+    level:
+      ru.yandex.practicum: DEBUG
+      org.springframework.web: DEBUG
+      org.springframework.r2dbc: DEBUG
+      io.r2dbc.postgresql.QUERY: DEBUG
+      liquibase: DEBUG
+      org.testcontainers: INFO
+
+server:
+  port: 8080
