@@ -18,7 +18,7 @@ public class PaymentClientService {
     private static final Duration TIMEOUT = Duration.ofSeconds(3);
 
     public Mono<Long> getBalance(Long userId) {
-        return paymentApi.getBalance()
+        return paymentApi.getBalance(userId)
                 .timeout(TIMEOUT)
                 .map(BalanceResponse::getAmount)
                 .onErrorReturn(-1L);
@@ -29,11 +29,11 @@ public class PaymentClientService {
                 .map(balance -> balance >= 0 && balance >= amount);
     }
 
-    public Mono<Boolean> processPayment(long amount) {
+    public Mono<Boolean> processPayment(Long userId, long amount) {
         PaymentRequest request = new PaymentRequest();
         request.setAmount(amount);
 
-        return paymentApi.processPayment(request)
+        return paymentApi.processPayment(userId, request)
                 .timeout(TIMEOUT)
                 .map(PaymentResponse::getSuccess)
                 .onErrorReturn(false);
