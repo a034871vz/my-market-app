@@ -25,7 +25,8 @@ public class Order {
     @Column("total_sum")
     private Long totalSum;
 
-    public Order(long sum) {
-        this.totalSum = sum;
+    public Order(Long total, Long userId) {
+        this.totalSum = total;
+        this.userId = userId;
     }
 }

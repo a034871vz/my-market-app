@@ -17,15 +17,15 @@ public class PaymentClientService {
     private final PaymentApi paymentApi;
     private static final Duration TIMEOUT = Duration.ofSeconds(3);
 
-    public Mono<Long> getBalance() {
+    public Mono<Long> getBalance(Long userId) {
         return paymentApi.getBalance()
                 .timeout(TIMEOUT)
                 .map(BalanceResponse::getAmount)
                 .onErrorReturn(-1L);
     }
 
-    public Mono<Boolean> hasEnoughFunds(long amount) {
-        return getBalance()
+    public Mono<Boolean> hasEnoughFunds(Long userId, long amount) {
+        return getBalance(userId)
                 .map(balance -> balance >= 0 && balance >= amount);
     }
 

@@ -10,6 +10,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
     implementation("io.swagger.core.v3:swagger-annotations:2.2.28")
 

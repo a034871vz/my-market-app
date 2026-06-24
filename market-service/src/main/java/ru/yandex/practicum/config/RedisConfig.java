@@ -21,8 +21,7 @@ public class RedisConfig {
     public ReactiveRedisTemplate<String, Item> itemRedisTemplate(
             ReactiveRedisConnectionFactory factory, ObjectMapper objectMapper) {
 
-        Jackson2JsonRedisSerializer<Item> serializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper, Item.class);
+        Jackson2JsonRedisSerializer<Item> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Item.class);
 
         RedisSerializationContext<String, Item> context = RedisSerializationContext
                 .<String, Item>newSerializationContext(new StringRedisSerializer())
@@ -36,8 +35,7 @@ public class RedisConfig {
     public ReactiveRedisTemplate<String, List<Item>> listRedisTemplate(
             ReactiveRedisConnectionFactory factory, ObjectMapper objectMapper) {
 
-        Jackson2JsonRedisSerializer<List<Item>> serializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper,
+        Jackson2JsonRedisSerializer<List<Item>> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
                         objectMapper.getTypeFactory().constructCollectionType(List.class, Item.class));
 
         RedisSerializationContext<String, List<Item>> context = RedisSerializationContext
@@ -52,8 +50,7 @@ public class RedisConfig {
     public ReactiveRedisTemplate<String, Long> longRedisTemplate(
             ReactiveRedisConnectionFactory factory) {
 
-        Jackson2JsonRedisSerializer<Long> serializer =
-                new Jackson2JsonRedisSerializer<>(Long.class);
+        Jackson2JsonRedisSerializer<Long> serializer = new Jackson2JsonRedisSerializer<>(Long.class);
 
         RedisSerializationContext<String, Long> context = RedisSerializationContext
                 .<String, Long>newSerializationContext(new StringRedisSerializer())

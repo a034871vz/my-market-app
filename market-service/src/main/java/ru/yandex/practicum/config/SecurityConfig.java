@@ -1,0 +1,50 @@
+package ru.yandex.practicum.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import ru.yandex.practicum.repository.UserRepository;
+
+@Configuration
+@EnableWebFluxSecurity
+@EnableReactiveMethodSecurity
+public class SecurityConfig {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public ReactiveUserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> userRepository.findByUsername(username)
+                .map(user -> org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getUsername())
+                        .password(user.getPassword())
+                        .roles(user.getRole())
+                        .build());
+    }
+
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        return http
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/", "/items", "/items/**").permitAll()
+                        .pathMatchers("/login", "/logout").permitAll()
+                        .pathMatchers("/cart/**", "/orders/**", "/buy").authenticated()
+                        .anyExchange().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login"))
+                .logout(logout -> logout
+                        .logoutUrl("/logout"))
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .build();
+    }
+}
