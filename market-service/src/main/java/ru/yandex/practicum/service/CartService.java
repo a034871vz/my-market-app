@@ -16,19 +16,16 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final CachedItemService cachedItemService;
     private final PaymentClientService paymentClientService;
-    private final UserService userService;
 
-    public Mono<Integer> getCount(Long itemId) {
-        return userService.getCurrentUserId()
-                .flatMap(userId -> cartItemRepository.findByUserIdAndItemId(userId, itemId)
+    public Mono<Integer> getCount(Long itemId, Long userId) {
+        return cartItemRepository.findByUserIdAndItemId(userId, itemId)
                         .map(CartItem::getCount)
-                        .defaultIfEmpty(0));
+                        .defaultIfEmpty(0);
     }
 
     @Transactional
-    public Mono<Void> updateCartItem(Long itemId, String action) {
-        return userService.getCurrentUserId()
-                .flatMap(userId -> cartItemRepository.findByUserIdAndItemId(userId, itemId)
+    public Mono<Void> updateCartItem(Long itemId, String action, Long userId) {
+        return cartItemRepository.findByUserIdAndItemId(userId, itemId)
                         .flatMap(cartItem -> switch (action) {
                             case "PLUS" -> {
                                 cartItem.setCount(cartItem.getCount() + 1);
@@ -50,23 +47,19 @@ public class CartService {
                                 return cartItemRepository.save(new CartItem(itemId, userId, 1));
                             }
                             return Mono.empty();
-                        })))
-                        .
-
-                then();
+                        }))
+                        .then();
     }
 
-    public Flux<ItemDto> getCartItems() {
-        return userService.getCurrentUserId()
-                .flatMapMany(cartItemRepository::findByUserId)
+    public Flux<ItemDto> getCartItems(Long userId) {
+        return cartItemRepository.findByUserId(userId)
                 .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId())
                         .switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
                         .map(item -> new ItemDto(item, cartItem.getCount())));
     }
 
-    public Mono<Long> getTotal() {
-        return userService.getCurrentUserId()
-                .flatMapMany(cartItemRepository::findByUserId)
+    public Mono<Long> getTotal(Long userId) {
+        return cartItemRepository.findByUserId(userId)
                 .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId())
                         .switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
                         .map(item -> item.getPrice() * cartItem.getCount()))
@@ -75,25 +68,22 @@ public class CartService {
     }
 
     @Transactional
-    public Mono<Void> clearCart() {
-        return userService.getCurrentUserId().flatMap(cartItemRepository::deleteByUserId);
+    public Mono<Void> clearCart(Long userId) {
+        return cartItemRepository.deleteByUserId(userId);
     }
 
-    public Mono<Boolean> canCheckout() {
-        return userService.getCurrentUserId()
-                .flatMap(userId -> getTotal()
-                        .flatMap(total -> paymentClientService.hasEnoughFunds(userId, total)));
+    public Mono<Boolean> canCheckout(Long userId) {
+        return getTotal(userId).flatMap(total -> paymentClientService.hasEnoughFunds(userId, total));
     }
 
-    public Mono<String> getCheckoutStatusMessage() {
-        return userService.getCurrentUserId()
-                .flatMap(userId -> getTotal()
-                        .flatMap(total -> paymentClientService.getBalance(userId)
-                                .flatMap(balance -> {
-                                    if (balance < 0) return Mono.just("Сервис платежей недоступен");
-                                    if (balance < total) return Mono.just("Недостаточно средств на счёте");
-                                    return Mono.empty();
-                                })))
+    public Mono<String> getCheckoutStatusMessage(Long userId) {
+        return getTotal(userId)
+                .flatMap(total -> paymentClientService.getBalance(userId)
+                        .flatMap(balance -> {
+                            if (balance < 0) return Mono.just("Сервис платежей недоступен");
+                            if (balance < total) return Mono.just("Недостаточно средств на счёте");
+                            return Mono.empty();
+                        }))
                 .defaultIfEmpty("");
     }
 }

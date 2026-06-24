@@ -21,45 +21,36 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartService cartService;
-    private final UserService userService;
 
     @Transactional
-    public Mono<Long> createOrder() {
-        return userService.getCurrentUserId()
-                .flatMap(userId -> cartService.getCartItems()
+    public Mono<Long> createOrder(Long userId, Long total) {
+        return cartService.getCartItems(userId)
                         .collectList()
                         .switchIfEmpty(Mono.error(new RuntimeException("Нет заказов")))
-                        .flatMap(itemDtos -> {
-                            long totalSum = itemDtos.stream()
-                                    .mapToLong(item -> item.price() * item.count())
-                                    .sum();
-                            return orderRepository.save(new Order(totalSum, userId))
-                                    .flatMap(order -> {
-                                        List<OrderItem> orderItems = itemDtos.stream().map(item -> new OrderItem(order.getId(), item)).toList();
-                                        return orderItemRepository.saveAll(orderItems)
-                                                .then(cartService.clearCart())
-                                                .thenReturn(order.getId());
-                                    });
-                        }));
+                        .flatMap(itemDtos -> orderRepository.save(new Order(total, userId))
+                                .flatMap(order -> {
+                                    List<OrderItem> orderItems = itemDtos.stream().map(item -> new OrderItem(order.getId(), item)).toList();
+                                    return orderItemRepository.saveAll(orderItems)
+                                            .then(cartService.clearCart(userId))
+                                            .thenReturn(order.getId());
+                                }));
     }
 
-    public Flux<OrderDto> getAllOrders() {
-        return userService.getCurrentUserId()
-                .flatMapMany(orderRepository::findByUserId)
+    public Flux<OrderDto> getAllOrders(Long userId) {
+        return orderRepository.findByUserId(userId)
                 .flatMap(order -> orderItemRepository.findByOrderId(order.getId())
                         .map(ItemDto::new)
                         .collectList()
                         .map(items -> new OrderDto(order.getId(), items, order.getTotalSum())));
     }
 
-    public Mono<OrderDto> getOrder(Long id) {
-        return userService.getCurrentUserId()
-                .flatMap(userId -> orderRepository.findByIdAndUserId(id, userId)
-                        .switchIfEmpty(Mono.error(new RuntimeException("Заказ не найден: " + id)))
+    public Mono<OrderDto> getOrder(Long orderId, Long userId) {
+        return orderRepository.findByIdAndUserId(orderId, userId)
+                        .switchIfEmpty(Mono.error(new RuntimeException("Заказ не найден: " + orderId)))
                         .flatMap(order -> orderItemRepository.findByOrderId(order.getId())
                                 .map(ItemDto::new)
                                 .collectList()
                                 .map(items -> new OrderDto(order.getId(), items, order.getTotalSum()))
-                        ));
+                        );
     }
 }

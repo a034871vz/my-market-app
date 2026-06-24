@@ -5,11 +5,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import ru.yandex.practicum.repository.UserRepository;
+
+import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -24,11 +27,12 @@ public class SecurityConfig {
     @Bean
     public ReactiveUserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByUsername(username)
-                .map(user -> org.springframework.security.core.userdetails.User.builder()
-                        .username(user.getUsername())
-                        .password(user.getPassword())
-                        .roles(user.getRole())
-                        .build());
+                .map(user -> new MarketUserDetails(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getPassword(),
+                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+                ));
     }
 
     @Bean
