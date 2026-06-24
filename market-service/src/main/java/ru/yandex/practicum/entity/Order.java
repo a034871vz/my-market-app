@@ -19,6 +19,9 @@ public class Order {
     @Id
     private Long id;
 
+    @Column("user_id")
+    private Long userId;
+
     @Column("total_sum")
     private Long totalSum;
 

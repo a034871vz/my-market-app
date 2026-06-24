@@ -21,6 +21,9 @@ public class CartItem {
     @Column("item_id")
     private Long itemId;
 
+    @Column("user_id")
+    private Long userId;
+
     @Column()
     private Integer count;
 
