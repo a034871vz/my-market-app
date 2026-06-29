@@ -1,5 +1,6 @@
 package ru.yandex.practicum.service;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -10,7 +11,13 @@ public class UserService {
 
     public Mono<Long> getCurrentUserId() {
         return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> (MarketUserDetails) ctx.getAuthentication().getPrincipal())
-                .map(MarketUserDetails::getUserId);
+                .flatMap(ctx -> {
+                    Authentication auth = ctx.getAuthentication();
+                    if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof MarketUserDetails) {
+                        return Mono.just(((MarketUserDetails) auth.getPrincipal()).getUserId());
+                    }
+                    return Mono.empty();
+                })
+                .onErrorReturn(-1L);
     }
 }

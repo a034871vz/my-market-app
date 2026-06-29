@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./market-service/src/main/resources/db/init/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
   redis:
@@ -19,6 +20,26 @@ services:
     container_name: market_redis
     ports:
       - "6379:6379"
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.4
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/marketdb?currentSchema=keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KC_DB_SCHEMA: keycloak
+    ports:
+      - "8082:8080"
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak-import:/opt/keycloak/data/import
+    depends_on:
+      - postgres
     restart: unless-stopped
 
   payment-service:
@@ -50,6 +71,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       SERVER_PORT: 8080
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
     ports:
       - "8080:8080"
     restart: unless-stopped
