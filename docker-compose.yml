@@ -47,8 +47,17 @@ services:
       context: .
       dockerfile: payment-service/Dockerfile
     container_name: payment_service
+    depends_on:
+      - postgres
+      - keycloak
     environment:
+      SPRING_PROFILES_ACTIVE: dev
       SERVER_PORT: 8081
+      KEYCLOAK_HOST: keycloak
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: marketdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "8081:8081"
     restart: unless-stopped
@@ -61,6 +70,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - keycloak
       - payment-service
     environment:
       SPRING_PROFILES_ACTIVE: dev
@@ -71,6 +81,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       SERVER_PORT: 8080
+      KEYCLOAK_HOST: keycloak
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
     ports:
       - "8080:8080"

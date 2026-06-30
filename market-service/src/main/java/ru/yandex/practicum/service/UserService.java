@@ -18,6 +18,7 @@ public class UserService {
                     }
                     return Mono.empty();
                 })
+                .defaultIfEmpty(-1L)
                 .onErrorReturn(-1L);
     }
 }

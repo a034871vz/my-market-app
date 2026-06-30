@@ -2,6 +2,7 @@ package ru.yandex.practicum.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -39,9 +40,10 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/", "/items", "/items/**").permitAll()
-                        .pathMatchers("/login", "/logout").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/", "/items", "/items/**").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/items", "/items/**").authenticated()
                         .pathMatchers("/cart/**", "/orders/**", "/buy").authenticated()
+                        .pathMatchers("/login", "/logout").permitAll()
                         .anyExchange().authenticated()
                 )
                 .formLogin(form -> form
