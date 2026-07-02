@@ -11,14 +11,16 @@ spring:
   thymeleaf:
     cache: false
 
-  logging:
-    level:
-      ru.yandex.practicum: DEBUG
-      org.springframework.web: DEBUG
-      org.springframework.r2dbc: DEBUG
-      io.r2dbc.postgresql.QUERY: DEBUG
-      liquibase: DEBUG
-      org.testcontainers: INFO
+logging:
+  level:
+    ru.yandex.practicum: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.r2dbc: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.access: DEBUG
+    io.r2dbc.postgresql.QUERY: DEBUG
+    liquibase: DEBUG
+    org.testcontainers: INFO
 
 server:
   port: 8080
