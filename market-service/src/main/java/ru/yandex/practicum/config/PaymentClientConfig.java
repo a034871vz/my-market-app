@@ -28,13 +28,10 @@ public class PaymentClientConfig {
         WebClient webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .filter(oauth)
-                .filter((request, next) -> {
-                    System.out.println("Request headers: " + request.headers());
-                    return next.exchange(request);
-                })
                 .build();
 
         ApiClient apiClient = new ApiClient(webClient);
+        apiClient.setBasePath(baseUrl);
 
         PaymentApi paymentApi = new PaymentApi();
         paymentApi.setApiClient(apiClient);

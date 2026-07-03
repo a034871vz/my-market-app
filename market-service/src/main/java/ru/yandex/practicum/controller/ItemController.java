@@ -29,8 +29,10 @@ public class ItemController {
     private final UserService userService;
 
     @GetMapping({"/", "/items"})
-    public Mono<String> getItems(@RequestParam(required = false) String search, @RequestParam(required = false, defaultValue = "NO") String sort,
-                                 @RequestParam(required = false, defaultValue = "1") int pageNumber, @RequestParam(required = false, defaultValue = "5") int pageSize,
+    public Mono<String> getItems(@RequestParam(required = false) String search,
+                                 @RequestParam(required = false, defaultValue = "NO") String sort,
+                                 @RequestParam(required = false, defaultValue = "1") int pageNumber,
+                                 @RequestParam(required = false, defaultValue = "5") int pageSize,
                                  Model model) {
 
         return userService.getCurrentUserId()
@@ -59,6 +61,7 @@ public class ItemController {
                                             }
                                             itemRows.add(currentRow);
                                         }
+
                                         model.addAttribute("items", itemRows);
                                         model.addAttribute("search", search != null ? search : "");
                                         model.addAttribute("sort", sort);
@@ -68,7 +71,6 @@ public class ItemController {
                                         return "items";
                                     });
                         }));
-
     }
 
     @PostMapping("/items")
@@ -91,7 +93,7 @@ public class ItemController {
                                         if (search != null && !search.isEmpty()) {
                                             redirect.append("&search=").append(search);
                                         }
-                                        if (!"NO" .equals(sort)) {
+                                        if (!"NO".equals(sort)) {
                                             redirect.append("&sort=").append(sort);
                                         }
                                         return redirect.toString();

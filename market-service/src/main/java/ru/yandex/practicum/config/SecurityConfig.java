@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 import ru.yandex.practicum.repository.UserRepository;
 
 import java.util.List;
@@ -53,5 +54,10 @@ public class SecurityConfig {
                         .logoutUrl("/logout"))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .build();
+    }
+
+    @Bean
+    public SpringSecurityDialect springSecurityDialect() {
+        return new SpringSecurityDialect();
     }
 }
