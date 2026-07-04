@@ -33,8 +33,7 @@ spring:
             scope: payment
         provider:
           keycloak:
-#            issuer-uri: http://${KEYCLOAK_HOST:localhost}:8082/realms/market-realm
-            token-uri: http://${KEYCLOAK_HOST:localhost}:8082/realms/market-realm/protocol/openid-connect/token
+            token-uri: http://${KEYCLOAK_HOST:localhost}:8080/realms/market-realm/protocol/openid-connect/token
 
 payment:
   service:

@@ -20,6 +20,8 @@
 * PostgreSQL
 * Spring Data Redis
 * Thymeleaf
+* Spring Security (OAuth2 Client + Resource Server)
+* Keycloak
 * OpenAPI Generator
 * Liquibase
 * Testcontainers
@@ -34,10 +36,10 @@
 * Просмотр витрины товаров с пагинацией
 * Поиск и сортировка товаров
 * Просмотр карточки товара
-* Управление корзиной
-* Оформление заказа
+* Управление корзиной (добавление, увеличение, уменьшение, удаление)
+* Оформление заказа с проверкой баланса
 * Просмотр истории заказов
-* Кеширование товаров в Redis
+* Кеширование товаров и страниц в Redis
 
 ### payment-service
 
@@ -46,7 +48,8 @@
 
 ## Интеграция сервисов
 
-Интеграция между сервисами реализована через реактивный HTTP-клиент, сгенерированный по OpenAPI-спецификации.
+- `market-service` → `payment-service`: реактивный HTTP-клиент, сгенерированный по OpenAPI-спецификации
+- Аутентификация между сервисами: OAuth2 Client Credentials (Keycloak)
 
 ## Локальный запуск
 
@@ -60,7 +63,7 @@
 ### Запуск инфраструктуры
 
 ```bash
-docker-compose up -d postgres redis
+docker-compose up -d postgres redis keycloak
 ```
 
 ### Сборка проекта
@@ -93,6 +96,7 @@ docker-compose up --build
 | ------------------------- | --------------------------- |
 | Витрина интернет-магазина | http://localhost:8080/items |
 | Сервис платежей           | http://localhost:8081       |
+| Keycloak Admin Console    | http://localhost:8082/admin |
 
 ## Тестирование
 
