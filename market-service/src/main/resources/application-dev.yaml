@@ -21,6 +21,20 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: 6379
 
+  security:
+    oauth2:
+      client:
+        registration:
+          payment-service:
+            provider: keycloak
+            client-id: market-service
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:default-secret}
+            authorization-grant-type: client_credentials
+            scope: payment
+        provider:
+          keycloak:
+            token-uri: http://${KEYCLOAK_HOST:localhost}:8080/realms/market-realm/protocol/openid-connect/token
+
 payment:
   service:
     url: ${PAYMENT_SERVICE_URL:http://localhost:8081}

@@ -21,11 +21,15 @@ public class CartItem {
     @Column("item_id")
     private Long itemId;
 
+    @Column("user_id")
+    private Long userId;
+
     @Column()
     private Integer count;
 
-    public CartItem(Long itemId, int count) {
+    public CartItem(Long itemId, Long userId, int count) {
         this.itemId = itemId;
+        this.userId = userId;
         this.count = count;
     }
 }

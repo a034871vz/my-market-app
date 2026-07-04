@@ -17,63 +17,68 @@ public class CartService {
     private final CachedItemService cachedItemService;
     private final PaymentClientService paymentClientService;
 
-    public Mono<Integer> getCount(Long itemId) {
-        return cartItemRepository.findByItemId(itemId)
-                .map(CartItem::getCount)
-                .defaultIfEmpty(0);
+    public Mono<Integer> getCount(Long itemId, Long userId) {
+        return cartItemRepository.findByUserIdAndItemId(userId, itemId)
+                        .map(CartItem::getCount)
+                        .defaultIfEmpty(0);
     }
 
     @Transactional
-    public Mono<Void> updateCartItem(Long itemId, String action) {
-        return cartItemRepository.findByItemId(itemId)
-                .flatMap(cartItem -> switch (action) {
-                    case "PLUS" -> {
-                        cartItem.setCount(cartItem.getCount() + 1);
-                        yield cartItemRepository.save(cartItem);
-                    }
-                    case "MINUS" -> {
-                        if (cartItem.getCount() > 1) {
-                            cartItem.setCount(cartItem.getCount() - 1);
-                            yield cartItemRepository.save(cartItem);
-                        } else {
-                            yield cartItemRepository.delete(cartItem);
-                        }
-                    }
-                    case "DELETE" -> cartItemRepository.delete(cartItem);
-                    default -> Mono.error(new IllegalArgumentException("Неизвестное действие " + action));
-                })
-                .switchIfEmpty("PLUS".equals(action)
-                        ? cartItemRepository.save(new CartItem(itemId, 1)).then()
-                        : Mono.empty()).then();
+    public Mono<Void> updateCartItem(Long itemId, String action, Long userId) {
+        return cartItemRepository.findByUserIdAndItemId(userId, itemId)
+                        .flatMap(cartItem -> switch (action) {
+                            case "PLUS" -> {
+                                cartItem.setCount(cartItem.getCount() + 1);
+                                yield cartItemRepository.save(cartItem);
+                            }
+                            case "MINUS" -> {
+                                if (cartItem.getCount() > 1) {
+                                    cartItem.setCount(cartItem.getCount() - 1);
+                                    yield cartItemRepository.save(cartItem);
+                                } else {
+                                    yield cartItemRepository.delete(cartItem);
+                                }
+                            }
+                            case "DELETE" -> cartItemRepository.delete(cartItem);
+                            default -> Mono.error(new IllegalArgumentException("Неизвестное действие " + action));
+                        })
+                        .switchIfEmpty(Mono.defer(() -> {
+                            if ("PLUS" .equals(action)) {
+                                return cartItemRepository.save(new CartItem(itemId, userId, 1));
+                            }
+                            return Mono.empty();
+                        }))
+                        .then();
     }
 
-    public Flux<ItemDto> getCartItems() {
-        return cartItemRepository.findAll()
+    public Flux<ItemDto> getCartItems(Long userId) {
+        return cartItemRepository.findByUserId(userId)
                 .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId())
                         .switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
                         .map(item -> new ItemDto(item, cartItem.getCount())));
     }
 
-    public Mono<Long> getTotal() {
-        return cartItemRepository.findAll()
+    public Mono<Long> getTotal(Long userId) {
+        return cartItemRepository.findByUserId(userId)
                 .flatMap(cartItem -> cachedItemService.findById(cartItem.getItemId())
                         .switchIfEmpty(Mono.error(new RuntimeException("Товар не найден: " + cartItem.getItemId())))
                         .map(item -> item.getPrice() * cartItem.getCount()))
-                .reduce(0L, Long::sum);
+                .reduce(0L, Long::sum)
+                .defaultIfEmpty(0L);
     }
 
     @Transactional
-    public Mono<Void> clearCart() {
-        return cartItemRepository.deleteAll();
+    public Mono<Void> clearCart(Long userId) {
+        return cartItemRepository.deleteByUserId(userId);
     }
 
-    public Mono<Boolean> canCheckout() {
-        return getTotal().flatMap(paymentClientService::hasEnoughFunds);
+    public Mono<Boolean> canCheckout(Long userId) {
+        return getTotal(userId).flatMap(total -> paymentClientService.hasEnoughFunds(userId, total));
     }
 
-    public Mono<String> getCheckoutStatusMessage() {
-        return getTotal()
-                .flatMap(total -> paymentClientService.getBalance()
+    public Mono<String> getCheckoutStatusMessage(Long userId) {
+        return getTotal(userId)
+                .flatMap(total -> paymentClientService.getBalance(userId)
                         .flatMap(balance -> {
                             if (balance < 0) return Mono.just("Сервис платежей недоступен");
                             if (balance < total) return Mono.just("Недостаточно средств на счёте");

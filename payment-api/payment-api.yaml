@@ -9,6 +9,14 @@ paths:
       operationId: getBalance
       tags:
         - Payment
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
       responses:
         '200':
           description: Current balance
@@ -22,6 +30,14 @@ paths:
       operationId: processPayment
       tags:
         - Payment
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
       requestBody:
         required: true
         content:

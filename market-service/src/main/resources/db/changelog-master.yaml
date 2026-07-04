@@ -5,3 +5,15 @@ databaseChangeLog:
   - include:
       file: changes/002-insert-items.sql
       relativeToChangelogFile: true
+  - include:
+      file: changes/003-create-table-users.sql
+      relativeToChangelogFile: true
+  - include:
+      file: changes/004-insert-users.sql
+      relativeToChangelogFile: true
+  - include:
+      file: changes/005-update-table-cart_items.sql
+      relativeToChangelogFile: true
+  - include:
+      file: changes/006-update-table-cart_orders.sql
+      relativeToChangelogFile: true
